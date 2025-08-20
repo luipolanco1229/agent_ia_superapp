@@ -1,4 +1,3 @@
-# app.py
 import json
 from datetime import date
 import streamlit as st
@@ -6,12 +5,9 @@ from agent_1 import interpretar_mensaje
 from agent_2 import planificar_mensaje
 from agent_3 import ejecutar_tareas
 
-# Configuración básica
 st.set_page_config(page_title="Agentes de Viaje", page_icon="🧭", layout="centered")
 st.title("🧭 Super App de Viajes")
 
-# --- Formulario compacto ---
-# --- Formulario compacto ---
 with st.form("trip_form"):
     origen = st.text_input("Origen", placeholder="Bogotá")
     destino = st.text_input("Destino", placeholder="Barcelona")
@@ -21,7 +17,6 @@ with st.form("trip_form"):
     intereses = st.text_area("Intereses", placeholder="museos, gastronomía, naturaleza")
     submitted = st.form_submit_button("Enviar")
 
-# --- Utilidades ---
 def build_payload(origen, destino, presupuesto, fecha_salida, fecha_regreso, intereses) -> str:
     """JSON inicial para el Agente 1."""
     return json.dumps({
@@ -41,7 +36,6 @@ def get_content(resp) -> str:
     except Exception as e:
         return f"(Respuesta del agente no válida o agente sin configurar: {e})"
 
-# --- Flujo encadenado ---
 def call_agents(payload_str: str):
     with st.spinner("Procesando solicitud..."):
         # Agente 1 — Interpretador
@@ -62,7 +56,6 @@ def call_agents(payload_str: str):
         st.subheader("🔗 Agente 3 — Enlaces (JSON)")
         st.code(resp3, language="json")
 
-    # -------- Resumen final limpio --------
     st.markdown("---")
     st.header("✅ Resumen Final")
 
@@ -73,10 +66,8 @@ def call_agents(payload_str: str):
         st.text(resp3)
         return
 
-    # Título/destino
     st.success(f"Plan de viaje para **{final_data.get('destino', 'Destino desconocido')}**")
 
-    # Planificación (si viene)
     if isinstance(final_data.get("tareas"), list) and final_data["tareas"]:
         st.subheader("🗂️ Planificación")
         for t in final_data["tareas"]:
@@ -87,20 +78,16 @@ def call_agents(payload_str: str):
             est = t.get("estimado_usd", "-")
             st.markdown(f"- **{item}** — {desc} (USD {est})")
 
-    # --- Recolectar TODOS los enlaces (raíz + por tarea) ---
     enlaces = []
 
-    # 1) nivel raíz
     if isinstance(final_data.get("enlaces_compra"), list):
         enlaces.extend(final_data["enlaces_compra"])
 
-    # 2) dentro de cada tarea
     if isinstance(final_data.get("tareas"), list):
         for t in final_data["tareas"]:
             if isinstance(t, dict) and isinstance(t.get("enlaces_compra"), list):
                 enlaces.extend(t["enlaces_compra"])
 
-    # De-duplicar por URL (conservando orden)
     vistos = set()
     enlaces_unicos = []
     for e in enlaces:
@@ -111,7 +98,6 @@ def call_agents(payload_str: str):
             vistos.add(url)
             enlaces_unicos.append(e)
 
-    # Mostrar enlaces
     st.subheader("🛒 Enlaces de compra / reserva")
     if not enlaces_unicos:
         st.info("Este plan no incluyó enlaces de compra. Ajusta el prompt del Agente 3 o vuelve a intentar.")
@@ -131,7 +117,6 @@ def call_agents(payload_str: str):
                     f"  `URL inválida: {url}`"
                 )
 
-# --- Main ---
 if submitted:
     if not destino.strip():
         st.warning("Por favor escribe un destino.")
